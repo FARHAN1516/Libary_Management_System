@@ -1,0 +1,200 @@
+
+import java.sql.*;
+import java.util.Scanner;
+
+public class Books_Managing {
+
+	public static void addBook() {
+		try {
+
+			Connection conn = DBConnection.getConnection();
+
+			System.out.print("Enter Book-Name : ");
+			String title = Main.input.nextLine();
+
+			System.out.print("Enter Book ID: ");
+			int bookId = Main.input.nextInt();
+			Main.input.nextLine(); // consume newline
+
+			System.out.print("Enter Category: ");
+			String category = Main.input.nextLine();
+
+			System.out.print("Enter Available Copies: ");
+			int copies = Main.input.nextInt();
+			Main.input.nextLine(); // consume newline
+
+			System.out.print("Enter Registered Author ID: ");
+			int authorId = Main.input.nextInt();
+			Main.input.nextLine(); // consume newline
+
+			String sql = "INSERT INTO books (`Book name`, `Book_ID`,  category, quantity , `author_id` ) VALUES (?,  ?, ?, ?, ?)";
+
+			PreparedStatement pstmt = conn.prepareStatement(sql);
+			pstmt.setString(1, title);
+			pstmt.setInt(2, bookId);
+
+			pstmt.setString(3, category);
+			pstmt.setInt(4, copies);
+			pstmt.setInt(5, authorId);
+
+			int rows = pstmt.executeUpdate();
+			if (rows > 0) {
+				System.out.println("✅ Book added successfully.");
+			} else {
+				System.out.println("⚠️ Failed to add the book.");
+			}
+
+			pstmt.close();
+			conn.close();
+
+		}
+
+		catch (SQLIntegrityConstraintViolationException e) {
+			System.out.println(
+					"⚠️ Failed to Add Book . Reasons can be 1. Author Id might not be Registered .   2. Maybe The Book ID already Exists\n"
+							+ e);
+
+		}
+
+		catch (SQLException e) {
+
+			System.out.println("⚠️ Failed to Add Book .  Exception Occured : " + e);
+
+		}
+
+		catch (Exception e) {
+			System.out.println("Exception Occured . " + e);
+		}
+
+	}
+
+	public static void RemoveBook() {
+
+		try {
+
+			System.out.println("Enter the Book-Id you want to remove : ");
+			int rd = Main.input.nextInt();
+
+			Connection conn = DBConnection.getConnection();
+
+			String checkbook = "Select * from books where Book_ID = ? ";
+			PreparedStatement checkstmt = conn.prepareStatement(checkbook);
+			checkstmt.setInt(1, rd);
+			ResultSet rs = checkstmt.executeQuery();
+
+			if (rs.next()) {
+
+				String deleteSql = "DELETE FROM books WHERE Book_ID = ?";
+				PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
+				deleteStmt.setInt(1, rd);
+
+				int rowsDeleted = deleteStmt.executeUpdate();
+				if (rowsDeleted > 0) {
+					System.out.println("✅ Book with ID " + rd + " removed successfully.");
+				} else {
+					System.out.println("⚠️ Failed to remove the book.");
+				}
+
+				deleteStmt.close();
+			}
+
+			else {
+				System.out.println("❌ No book found with ID " + rd);
+			}
+
+			rs.close();
+			checkstmt.close();
+			conn.close();
+
+		} catch (SQLException e) {
+			System.out.println("SQL Exception: " + e.getMessage());
+		} catch (Exception e) {
+			System.out.println("Exception: " + e.getMessage());
+		}
+
+	}
+
+	public static void DisplayBook() {
+		try {
+
+			boolean found = false;
+			Connection con = DBConnection.getConnection();
+
+			String displaybook = "SELECT books.*, author.Author_name\r\n" + "FROM books\r\n"
+					+ "JOIN author ON books.Author_id = author.Author_id;\r\n" + "";
+
+			PreparedStatement displaystmt = con.prepareStatement(displaybook);
+
+			ResultSet rs = displaystmt.executeQuery();
+
+			while (rs.next()) {
+				found = true;
+
+				System.out.print("\nBook Name : " + rs.getString("Book name"));
+				System.out.print("  || Book ID: " + rs.getInt("Book_ID"));
+				System.out.print("  || Author Name: " + rs.getString("Author_name"));
+				System.out.print("  || Author ID: " + rs.getInt("Author_id"));
+				System.out.print("  || Category: " + rs.getString("Category"));
+				System.out.print("  || Quantity: " + rs.getInt("Quantity"));
+
+			}
+
+			if (!found) {
+				System.out.println("\n ❌ No Books available in the database.");
+			}
+
+			rs.close();
+			displaystmt.close();
+			con.close();
+
+		}
+
+		catch (SQLException e) {
+			System.out.println("Error fetching books: " + e.getMessage());
+			e.printStackTrace();
+		}
+
+		catch (Exception e) {
+			System.out.println("Exception Occured . " + e);
+		}
+
+	}
+
+	public static void Loaned_details() {
+
+		try {
+			boolean found = false;
+			Connection conn = DBConnection.getConnection();
+
+			String sql = "SELECT * FROM bookrented ";
+
+			PreparedStatement ps = conn.prepareStatement(sql);
+
+			ResultSet rs = ps.executeQuery();
+
+			while (rs.next()) {
+				found = true;
+
+				System.out.print("Book ID : " + rs.getInt("Book_ID"));
+				System.out.print("    Book Name : " + rs.getString("Book name"));
+
+				System.out.print("          Loaned To ---> Member ID  : " + rs.getInt("Member_id"));
+				System.out.print("    Member Name : " + rs.getString("Member_name"));
+				System.out.println("     Copies =  " + rs.getInt("Quantity"));
+
+			}
+
+			if (!found) {
+				System.out.println("\n ❌ No Loan details are  available in the database.");
+			}
+
+		}
+
+		catch (Exception e) {
+
+			e.printStackTrace();
+		}
+
+	}
+
+}

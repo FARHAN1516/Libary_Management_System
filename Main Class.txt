@@ -1,0 +1,248 @@
+/*
+ In this PROJECT  We first need to Create the DATABASE  and TABLES manually in XAMPP.
+ The rest of the work is handled in the code. ✅
+  
+  The Exact codes we used in XAMPP.
+  
+  
+  1.
+  
+  Create Database project;
+  
+  
+  2.
+  
+  CREATE TABLE Author ( Author_id INT PRIMARY KEY, Author_name VARCHAR(100),
+  Email VARCHAR (100) );
+  
+  
+  3.
+  
+  
+  create table membership ( Member_name Varchar (100) , Member_id Int NOT NULL,
+  Primary key (Member_id) );
+  
+  
+  
+  4.
+  
+  
+  
+   CREATE TABLE books (
+  
+  `Book name` VARCHAR(255) NOT NULL, Book_ID INT PRIMARY KEY, Author_id INT NOT
+   NULL, Category VARCHAR(100), Quantity INT DEFAULT 0,
+  
+   Foreign key (Author_id ) References author (Author_id) );
+  
+  
+
+  5.
+  
+  
+  create table bookrented
+  
+  ( Member_id Int Not NULL, Member_name varchar (100),
+  
+  Book_ID Int Not Null, `Book name` Varchar (255), Quantity Int Not NULL,
+  
+  Foreign key (Member_id) References membership (Member_id), Foreign key
+  (Book_ID) References books (Book_ID) );
+  
+  
+  
+  
+  Another Point --->
+  The password to enter the admin panel is  = DBMS
+
+  F
+ */
+
+import java.util.Scanner;
+import java.util.InputMismatchException;
+
+public class Main {
+
+	public static final Scanner input = new Scanner(System.in);
+
+	public static void main(String[] args) {
+
+		DBConnection dbc = new DBConnection();
+		Books_Managing bm = new Books_Managing();
+		Author a = new Author();
+		Member_Managing mm = new Member_Managing();
+
+		int adminuser = 0;
+		int godeep = 0;
+		int godeep_2 = 0;
+
+		while (adminuser != 3) {
+
+			try {
+				System.out.println("\n                -------------------------------");
+				System.out.println("                |       Welcome To            |");
+				System.out.println("                | Libary Management System    |");
+				System.out.println("                -------------------------------");
+				System.out.println("\n\n                Choose To Operate -->");
+				System.out.println("                -----------------------------");
+				System.out.println("                |    1.  Admin Panel        |");
+				System.out.println("                |    2.  User Panel         |");
+				System.out.println("                |    3.  Exit               |");
+				System.out.println("                -----------------------------");
+
+				adminuser = input.nextInt();
+				input.nextLine();
+
+				if (adminuser == 1) {
+
+					System.out.println("Write The  Password To Enter To Admin Panel -->");
+					String passtoadmin = input.nextLine();
+
+					if (passtoadmin.equals(dbc.getpassword())) {
+
+						godeep = 0;
+
+						while (godeep != 9) {
+
+							System.out.println("\n                ----------------");
+							System.out.println("                |  ADMIN PANEL |");
+							System.out.println("                ----------------");
+
+							System.out.println("\n           1.Add Books                                 ");
+							System.out.println("           2.Remove Books                              ");
+							System.out.println("           3.Register Author                           ");
+							System.out.println("           4.Un-Register Author                        ");
+							System.out.println("           5.Display Books                             ");
+							System.out.println("           6.Display Authors                           ");
+							System.out.println("           7.Display Members                           ");
+							System.out.println("           8.Display Loaned Details                    ");
+							System.out.println("           9.Exit                                      ");
+
+							godeep = input.nextInt();
+							input.nextLine();
+
+							switch (godeep) {
+
+							case 1:
+
+								bm.addBook();
+								break;
+
+							case 2:
+								bm.RemoveBook();
+								break;
+
+							case 3:
+								a.Register_Author();
+								break;
+
+							case 4:
+								a.Unregister_Author();
+								break;
+
+							case 5:
+								bm.DisplayBook();
+								break;
+
+							case 6:
+								a.Display_Author();
+								break;
+
+							case 7:
+								mm.display_member();
+								break;
+
+							case 8:
+								bm.Loaned_details();
+								break;
+
+							case 9:
+								System.out.println("Exited . Thank You");
+								break;
+
+							default:
+								System.out.println("Invalid Option. Please Choose Any Valid Option");
+
+							}
+
+						}
+
+					}
+
+					else {
+						System.out.println("      Password is Incorrect ");
+					}
+
+				}
+
+				else if (adminuser == 2) {
+
+					godeep_2 = 0;
+
+					while (godeep_2 != 4) {
+
+						System.out.println("\n          ---------------------------");
+						System.out.println("          | Welcome to user Panel   |");
+						System.out.println("          ---------------------------\n");
+						System.out.println("             1.Create Membership ");
+						System.out.println("             2.Rent A Book      ");
+						System.out.println("             3.Return A Book");
+						System.out.println("             4.Exit Option   ");
+
+						godeep_2 = input.nextInt();
+						input.nextLine();
+
+						switch (godeep_2) {
+
+						case 1:
+							mm.create_membership();
+
+							break;
+
+						case 2:
+							mm.Renting_Book();
+							break;
+
+						case 3:
+							mm.return_book();
+							break;
+
+						case 4:
+							System.out.println("Exited");
+							break;
+
+						default:
+							System.out.println("Invalid Input");
+
+						} // swith-case 2
+
+					}
+
+				} // else if
+
+				else if (adminuser == 3) {
+					System.out.println("Exited From Management");
+				}
+
+				else {
+					System.out.println("Invalid input");
+				}
+
+			}
+
+			catch (InputMismatchException e) {
+				System.out.println("Your Input Giving is Wrong. Maybe u have typed String when");
+				System.out.println("needed a int value .  " + e);
+				input.nextLine();
+			}
+
+			catch (Exception e) {
+				System.out.println("There is a problem . " + e);
+			}
+
+		} // Main - While
+
+		input.close();
+
+	}
+}

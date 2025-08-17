@@ -1,0 +1,151 @@
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class Author {
+
+	public static void Register_Author() {
+
+		try {
+
+			Connection conn = DBConnection.getConnection();
+
+			String sql = "INSERT INTO Author (Author_id, Author_name, Email) VALUES (?, ?, ?)";
+
+			PreparedStatement stmt = conn.prepareStatement(sql);
+
+			System.out.print("Enter Author Name: ");
+			String authorname = Main.input.nextLine();
+
+			System.out.print("Enter Author ID: ");
+			int authorid = Main.input.nextInt();
+			Main.input.nextLine(); // consume leftover newline
+
+			System.out.print("Enter Author E-mail: ");
+			String authoremail = Main.input.nextLine();
+
+			stmt.setInt(1, authorid);
+			stmt.setString(2, authorname);
+			stmt.setString(3, authoremail);
+
+			int rows = stmt.executeUpdate();
+			if (rows > 0) {
+				System.out.println("✅ Author registered!");
+			} else {
+				System.out.println("⚠️ Failed to register author.");
+			}
+
+			stmt.close();
+			conn.close();
+
+		}
+
+		catch (SQLException e) {
+			System.out.println("❌ Database error: " + e.getMessage());
+			e.printStackTrace();
+		}
+
+		catch (Exception e) {
+			System.out.println("Exception Occured . " + e);
+		}
+	}
+
+	public static void Unregister_Author() {
+
+		try {
+			System.out.print("Enter Author ID to unregister: ");
+			int authorId = Main.input.nextInt();
+			Main.input.nextLine(); // consume newline
+
+			Connection conn = DBConnection.getConnection();
+
+			String checkSql = "SELECT * FROM Author WHERE Author_id = ?";
+
+			PreparedStatement checkStmt = conn.prepareStatement(checkSql);
+
+			checkStmt.setInt(1, authorId);
+
+			ResultSet rs = checkStmt.executeQuery();
+
+			if (rs.next()) {
+
+				String deleteSql = "DELETE FROM Author WHERE Author_id = ?";
+				PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
+
+				deleteStmt.setInt(1, authorId);
+
+				int rowsDeleted = deleteStmt.executeUpdate();
+
+				if (rowsDeleted > 0) {
+					System.out.println("✅ Author with ID " + authorId + " unregistered successfully.");
+				}
+
+				else {
+					System.out.println("⚠️ Failed to unregister the author.");
+				}
+
+				deleteStmt.close();
+			}
+
+			else {
+				System.out.println("❌ No author found with ID " + authorId);
+			}
+
+			rs.close();
+			checkStmt.close();
+			conn.close();
+
+		} catch (SQLException e) {
+			System.out.println("❌ Database error: " + e.getMessage());
+			e.printStackTrace();
+		} catch (Exception e) {
+			System.out.println("Exception Occured . " + e);
+		}
+
+	}
+
+	public static void Display_Author() {
+
+		try {
+
+			boolean found = false;
+
+			Connection conn = DBConnection.getConnection();
+
+			String sql = "select * from author ";
+
+			PreparedStatement psda = conn.prepareStatement(sql);
+
+			ResultSet rs = psda.executeQuery();
+
+			while (rs.next()) {
+				found = true;
+				System.out.print("\n  || Author Name  :  " + rs.getString("Author_name"));
+				System.out.print("              || Author ID    :  " + rs.getInt("Author_id"));
+				System.out.print("              || Author E-mail : " + rs.getString("Email"));
+
+			}
+
+			if (!found) {
+				System.out.println("\n ❌ No registered Authors available in the database.");
+			}
+
+			rs.close();
+			psda.close();
+			conn.close();
+
+		}
+
+		catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		catch (Exception e) {
+			System.out.println("Exception Occured . " + e);
+		}
+
+	}
+
+}

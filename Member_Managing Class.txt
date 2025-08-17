@@ -1,0 +1,346 @@
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+public class Member_Managing {
+
+	public static void create_membership() {
+		try {
+			System.out.println("Enter Your Name : ");
+			String member_name = Main.input.nextLine();
+
+			System.out.println("Enter Your ID : ");
+			int member_id = Main.input.nextInt();
+			Main.input.nextLine();
+
+			Connection conn = DBConnection.getConnection();
+			String sql = "insert into membership values (?,?)";
+			PreparedStatement psms = conn.prepareStatement(sql);
+
+			psms.setString(1, member_name);
+			psms.setInt(2, member_id);
+
+			int rows = psms.executeUpdate();
+
+			if (rows > 0) {
+				System.out.println("✅ Membership  Confirmed.");
+			} else {
+				System.out.println("⚠️ Failed to add membership .");
+			}
+
+			psms.close();
+			conn.close();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		catch (Exception e) {
+			System.out.println("Exception Occured . " + e);
+		}
+
+	}
+
+	public static void Renting_Book() {
+		try {
+			System.out.println("Enter Your Membership ID : ");
+			int rent_id = Main.input.nextInt();
+			Main.input.nextLine();
+
+			Connection conn = DBConnection.getConnection();
+
+			String sql = " select Member_name,Member_id from membership where Member_id = ?; ";
+			PreparedStatement psms = conn.prepareStatement(sql);
+			psms.setInt(1, rent_id);
+			ResultSet rs = psms.executeQuery();
+
+			if (rs.next()) {
+				String get_member_name = rs.getString("Member_name");
+				System.out.println("Yes. you have membership");
+				System.out.println("Enter the Book-ID you want : ");
+
+				int rent_book_id = Main.input.nextInt();
+				Main.input.nextLine();
+
+				String sqltemp = "Select  `Book name`,  Book_ID from books where Book_ID = ?";
+				PreparedStatement psmstemp = conn.prepareStatement(sqltemp);
+				psmstemp.setInt(1, rent_book_id);
+				ResultSet rstemp = psmstemp.executeQuery();
+
+				if (rstemp.next()) {
+					String sql2 = "Select  `Book name`, Book_ID from books where Book_ID = ?";
+					PreparedStatement psms2 = conn.prepareStatement(sql2);
+					psms2.setInt(1, rent_book_id);
+					ResultSet rs2 = psms2.executeQuery();
+					String get_book_name = rstemp.getString("Book name");
+
+					System.out.println("Enter the Quantity of the book u want : ");
+					int quantity = Main.input.nextInt();
+					Main.input.nextLine();
+
+					String sql3 = "Select Quantity from books where Book_ID = ?";
+					PreparedStatement psms3 = conn.prepareStatement(sql3);
+					psms3.setInt(1, rent_book_id);
+					ResultSet rs3 = psms3.executeQuery();
+
+					int get_quantity = 0;
+					if (rs3.next()) {
+						get_quantity = rs3.getInt("Quantity");
+					} else {
+						System.out.println("Some Problem Occured");
+					}
+
+					if (get_quantity > quantity && quantity != 0) {
+						String sql4 = "insert into bookrented values (?,?,?,?,?)";
+						PreparedStatement psms4 = conn.prepareStatement(sql4);
+						psms4.setInt(1, rent_id);
+						psms4.setString(2, get_member_name);
+						psms4.setInt(3, rent_book_id);
+						psms4.setString(4, get_book_name);
+						psms4.setInt(5, quantity);
+						psms4.executeUpdate();
+
+						int minus = get_quantity - quantity;
+						String sql5 = "update books Set Quantity = ? where Book_ID = ?";
+						PreparedStatement psms5 = conn.prepareStatement(sql5);
+						psms5.setInt(1, minus);
+						psms5.setInt(2, rent_book_id);
+						int Updated = psms5.executeUpdate();
+
+						if (Updated > 0) {
+							System.out.println("✅ Renting Confirmed . ");
+						} else {
+							System.out.println("⚠️ Some Problem Occured");
+						}
+
+						psms4.close();
+						psms5.close();
+					} else {
+						System.out.println("Quantity : " + quantity + " isn't available .");
+						rs3.close();
+						psms3.close();
+						rs2.close();
+						psms2.close();
+						rstemp.close();
+						psmstemp.close();
+						rs.close();
+						psms.close();
+						conn.close();
+						return;
+					}
+
+					rs3.close();
+					psms3.close();
+					rs2.close();
+					psms2.close();
+				} else {
+					System.out.println("Book-ID : " + rent_book_id + "is not available . ");
+					rstemp.close();
+					psmstemp.close();
+					rs.close();
+					psms.close();
+					conn.close();
+					return;
+				}
+
+				rstemp.close();
+				psmstemp.close();
+				rs.close();
+				psms.close();
+				conn.close();
+
+			} else {
+				System.out.println(
+						"Sorry renting books is not possible .  . Id : " + rent_id + "Doesn't have any membership. ");
+				rs.close();
+				psms.close();
+				conn.close();
+				return;
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		catch (Exception e) {
+			System.out.println("Exception Occured . " + e);
+		}
+	}
+
+	public static void return_book() {
+		try {
+			System.out.println("Enter Your Member-Id : ");
+			int return_id = Main.input.nextInt();
+			Main.input.nextLine();
+
+			int return_book_id;
+			int current_quantity = 0;
+			int return_book_copy;
+			String get_book_name;
+			String get_member_name;
+			int minus;
+
+			Connection conn = DBConnection.getConnection();
+
+			String sql = "SELECT member_name FROM bookrented WHERE Member_id = ? LIMIT 1;";
+			PreparedStatement psms = conn.prepareStatement(sql);
+			psms.setInt(1, return_id);
+			ResultSet rs = psms.executeQuery();
+
+			if (rs.next()) {
+				get_member_name = rs.getString("Member_name");
+				System.out.println("Enter the Book ID :  ");
+				return_book_id = Main.input.nextInt();
+				Main.input.nextLine();
+
+				String sql2 = "Select `Book name` from bookrented where Book_ID = ? limit 1 ;";
+				PreparedStatement psms2 = conn.prepareStatement(sql2);
+				psms2.setInt(1, return_book_id);
+				ResultSet rs2 = psms2.executeQuery();
+
+				if (rs2.next()) {
+					get_book_name = rs2.getString("Book name");
+
+					String sql3 = "Select Quantity from (SELECT Member_id, Member_name, Book_ID, `Book name`, SUM(Quantity) as Quantity FROM bookrented GROUP BY Member_id, Book_ID ) as first_list Where Member_id = ?  AND Book_ID = ? ;";
+					PreparedStatement psms3 = conn.prepareStatement(sql3);
+					psms3.setInt(1, return_id);
+					psms3.setInt(2, return_book_id);
+					ResultSet rs3 = psms3.executeQuery();
+
+					if (rs3.next()) {
+						current_quantity = rs3.getInt("Quantity");
+					}
+
+					System.out.println("Enter how many copies u want to return : ");
+					return_book_copy = Main.input.nextInt();
+					Main.input.nextLine();
+					minus = current_quantity - return_book_copy;
+
+					if (minus > 0) { // this part needed to understand
+						try {
+							conn.setAutoCommit(false); // Start transaction
+							String deleteSql = "DELETE FROM bookrented WHERE Member_id = ? AND Book_ID = ?";
+							PreparedStatement psDelete = conn.prepareStatement(deleteSql);
+							psDelete.setInt(1, return_id);
+							psDelete.setInt(2, return_book_id);
+							psDelete.executeUpdate();
+							psDelete.close();
+
+							String insertSql = "INSERT INTO bookrented (Member_name, Book_ID, `Book name`, Quantity, Member_id) VALUES (?, ?, ?, ?, ?)";
+							PreparedStatement psInsert = conn.prepareStatement(insertSql);
+							psInsert.setString(1, get_member_name);
+							psInsert.setInt(2, return_book_id);
+							psInsert.setString(3, get_book_name);
+							psInsert.setInt(4, minus);
+							psInsert.setInt(5, return_id);
+							psInsert.executeUpdate();
+							psInsert.close();
+
+							conn.commit(); // 3. Commit transaction
+						} catch (Exception ex) {
+							conn.rollback(); // Undo if something failed
+							ex.printStackTrace();
+						} finally {
+							conn.setAutoCommit(true); // Return to normal mode
+						}
+
+						String sql4 = "UPDATE books SET Quantity = Quantity + ? WHERE Book_ID = ?";
+						PreparedStatement ps4 = conn.prepareStatement(sql4);
+						ps4.setInt(1, return_book_copy);
+						ps4.setInt(2, return_book_id);
+						ps4.executeUpdate();
+						ps4.close();
+
+						System.out.println("Book Returned Succesfully . Book id :  " + return_book_id
+								+ "  Returned copies :  " + return_book_copy);
+
+					} else if (minus == 0) {
+						String sql5 = "DELETE FROM bookrented WHERE Member_id = ? AND Book_ID = ?";
+						PreparedStatement ps5 = conn.prepareStatement(sql5);
+						ps5.setInt(1, return_id);
+						ps5.setInt(2, return_book_id);
+						ps5.executeUpdate();
+						ps5.close();
+
+						String sql6 = "UPDATE books SET Quantity = Quantity + ? WHERE Book_ID = ?";
+						PreparedStatement ps6 = conn.prepareStatement(sql6);
+						ps6.setInt(1, return_book_copy);
+						ps6.setInt(2, return_book_id);
+						ps6.executeUpdate();
+						ps6.close();
+
+						System.out.println("Book Returned Succesfully . Book id :  " + return_book_id
+								+ "  Returned copies :  " + return_book_copy);
+
+					} else {
+						System.out.println("Book Return Failed . You did not borrowed this amount of books");
+						rs3.close();
+						psms3.close();
+						rs2.close();
+						psms2.close();
+						rs.close();
+						psms.close();
+						conn.close();
+						return;
+					}
+
+					rs3.close();
+					psms3.close();
+				} else {
+					System.out.println("No Book is currently Loaned With This ID : " + return_book_id);
+					rs2.close();
+					psms2.close();
+					rs.close();
+					psms.close();
+					conn.close();
+					return;
+				}
+
+				rs2.close();
+				psms2.close();
+			} else {
+				System.out.println("No Book is loaned for this ID :  " + return_id);
+				rs.close();
+				psms.close();
+				conn.close();
+				return;
+			}
+
+			rs.close();
+			psms.close();
+			conn.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void display_member() {
+		try {
+
+			boolean found = false;
+			Connection conn = DBConnection.getConnection();
+			String sql = "SELECT Member_name, Member_id FROM membership";
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ResultSet rs = ps.executeQuery();
+
+			while (rs.next()) {
+				found = true;
+				System.out.print("Member Name :  " + rs.getString("Member_name"));
+				System.out.println("          Member ID :  " + rs.getString("Member_id"));
+			}
+
+			if (!found) {
+				System.out.println("\n ❌ No Members available in the database.");
+			}
+
+			rs.close();
+			ps.close();
+			conn.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}
